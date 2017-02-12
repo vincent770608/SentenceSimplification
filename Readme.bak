@@ -8,6 +8,6 @@ example:
 
 [1. that you like to swim] and [2. who the US president is] are the major significance of the sentences.
 
-The numbers 1. before the clause means that the first node in this clause is on the two layer,the numbers 2. means that the first node root in this clause is on the three layer, and so on.
+The numbers 1. before the clause means that the node associated with root in this clause is on the two layer,the numbers 2. means that the node associated with root in this clause is on the three layer, and so on.
 
 Chinese sentences can also be parsed in "ChineseSentenceSimplification.java".
