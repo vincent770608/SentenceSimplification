@@ -1,4 +1,4 @@
-Target:Parsing a sentence into a combination of clauses, in order to analyze the significance of the sentences, or to find the main clause.
+SentenceSimplification is parsing a sentence into a combination of clauses, in order to analyze the significance of the sentences, or to find the main clause.
 
 Tools:Using java and Stanford CoreNLP 3.7.0 Dependency Graph
 

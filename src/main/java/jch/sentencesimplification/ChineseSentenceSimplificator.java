@@ -1,9 +1,13 @@
 package jch.sentencesimplification;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.Set;
 
 import edu.stanford.nlp.ling.IndexedWord;
@@ -24,9 +28,23 @@ public class ChineseSentenceSimplificator {
 
 	public static void main(String [] args)
 	{
+//		Sample input:
+//		String text = "你知道美国总统是谁吗";//O
+//      String text = "他說你喜歡游泳";//O
+//      String text = "你和他知道他妈妈是谁吗";//O
+//      String text = "你知道苹果最新发表的电脑吗";//O
+		BufferedReader buf = new BufferedReader(new InputStreamReader(System.in)); 
 		ChineseSentenceSimplificator css  = new ChineseSentenceSimplificator();
-		List<String> dissentences = css.ProcessDepency();
-		System.out.println(dissentences);
+		System.out.print("請輸入您的問句: ");
+		String text = "";
+		try {
+			text = buf.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		List<String> dissentences = css.ProcessDepency(text);
+		System.out.println("子句: "+dissentences);
 	}
 	
 	private Set<IndexedWord> rootsubgraph = null;
@@ -35,14 +53,12 @@ public class ChineseSentenceSimplificator {
 	private List<String> dobjsentences = new ArrayList<String>();
 	private List<String> depsentences = new ArrayList<String>();
 
-	public List<String> ProcessDepency()
+	public List<String> ProcessDepency(String text)
 	{
 //		SentenceSimplificator sentencesimplification = new SentenceSimplificator();
         StanfordCoreNLP pipeline = new StanfordCoreNLP("StanfordCoreNLP-chinese.properties");
-      String text = "你問他知道美国总统是谁吗";//O
-//        String text = "他說你喜歡游泳";//O
-//        String text = "你和他知道他妈妈是谁吗";//O
-//        String text = "你知道苹果最新发表的电脑吗";//O
+        
+        
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
@@ -50,9 +66,10 @@ public class ChineseSentenceSimplificator {
         
         for (CoreMap sentence: sentences) 
         {
-        	SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
-//        	SemanticGraph dependencies = sentence.get(BasicDependenciesAnnotation.class);
-        	
+//        	SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
+        	SemanticGraph dependencies = sentence.get(BasicDependenciesAnnotation.class);
+        	System.out.println("輸入文字: "+text);
+        	System.out.println("SemanticGraph:");
         	System.out.println(dependencies);
         	IndexedWord root = dependencies.getFirstRoot();
         	
@@ -65,7 +82,7 @@ public class ChineseSentenceSimplificator {
         	this.dobjAnalyze(dependencies, root, layersnum);
         	this.depAnalyze(dependencies, root, layersnum);
         	
-        	System.out.println("rootsubgraph "+rootsubgraph);
+//        	System.out.println("rootsubgraph "+rootsubgraph);
     		Iterator<IndexedWord> iterrootsubgraph = rootsubgraph.iterator();
     		String rootsentence = "";
     		while(iterrootsubgraph.hasNext())
@@ -74,7 +91,7 @@ public class ChineseSentenceSimplificator {
         	}
     		
     		rootsentence = "0."+rootsentence;
-    		System.out.println("rootsentence "+rootsentence);
+//    		System.out.println("rootsentence "+rootsentence);
     		
     		dissentences.add(rootsentence);
     		dissentences.addAll(nsubjsentences);
@@ -94,9 +111,9 @@ public class ChineseSentenceSimplificator {
     	while(matcher.find())
     	{
     		IndexedWord nsubjnode = matcher.getNode("B");
-    		System.out.println(matcher.getNode("A") + " >nsubj " +nsubjnode);
+//    		System.out.println(matcher.getNode("A") + " >nsubj " +nsubjnode);
             
-            System.out.println("nsubjsubgraph "+nsubjsubgraph);
+//            System.out.println("nsubjsubgraph "+nsubjsubgraph);
 
             SemgrexPattern pattern1 = SemgrexPattern.compile("{word:"+nsubjnode.word()+";tag:"+nsubjnode.tag()+"}=A >relcl {}=B");
             SemgrexPattern pattern2 = SemgrexPattern.compile("{word:"+nsubjnode.word()+";tag:"+nsubjnode.tag()+"}=A >acl {}=B");
@@ -108,7 +125,7 @@ public class ChineseSentenceSimplificator {
     			layersnum++;
 
     			nsubjsubgraph = dependencies.getSubgraphVertices(nsubjnode);
-    			System.out.println("nsubjsubgraph "+nsubjsubgraph);
+//    			System.out.println("nsubjsubgraph "+nsubjsubgraph);
     			
     			rootsubgraph.removeAll(nsubjsubgraph);
     			
@@ -156,9 +173,9 @@ public class ChineseSentenceSimplificator {
     	{
     		IndexedWord dobjnode = matcher.getNode("B");
 
-    		System.out.println(matcher.getNode("A") + " >dobj " +dobjnode);
+//    		System.out.println(matcher.getNode("A") + " >dobj " +dobjnode);
             
-            System.out.println("dobjsubgraph "+dobjsubgraph);
+//            System.out.println("dobjsubgraph "+dobjsubgraph);
 
             SemgrexPattern pattern1 = SemgrexPattern.compile("{word:"+dobjnode.word()+";tag:"+dobjnode.tag()+"}=A >relcl {}=B");
         	SemgrexMatcher matcher1 = pattern1.matcher(dependencies);
@@ -173,7 +190,7 @@ public class ChineseSentenceSimplificator {
     		{
     			layersnum++;
     			dobjsubgraph = dependencies.getSubgraphVertices(dobjnode);
-    			System.out.println("dobjsubgraph "+dobjsubgraph);
+//    			System.out.println("dobjsubgraph "+dobjsubgraph);
     			
     			rootsubgraph.removeAll(dobjsubgraph);
     			
@@ -206,7 +223,7 @@ public class ChineseSentenceSimplificator {
             	{
         			dobjsentence = dobjsentence+iterdobjsubgraph.next().word();
             	}
-        		System.out.println("dobjsentence "+dobjsentence);
+//        		System.out.println("dobjsentence "+dobjsentence);
         		dobjsentences.add(dobjsentence);
     		}
 		}
@@ -226,9 +243,9 @@ public class ChineseSentenceSimplificator {
     		IndexedWord ccompnode = matcher.getNode("B");
 
     		ccompsubgraph = dependencies.getSubgraphVertices(ccompnode);
-    		System.out.println(matcher.getNode("A") + " >ccomp " +ccompnode);
+//    		System.out.println(matcher.getNode("A") + " >ccomp " +ccompnode);
             
-            System.out.println("ccompsubgraph "+ccompsubgraph);
+//            System.out.println("ccompsubgraph "+ccompsubgraph);
     		rootsubgraph.removeAll(ccompsubgraph);
     		
     		Set<IndexedWord> ccompccompsub = this.ccompAnalyze(dependencies, ccompnode, layersnum);
@@ -260,7 +277,7 @@ public class ChineseSentenceSimplificator {
     			ccompsentence = ccompsentence+iterccompsubgraph.next().word();
         	}
     		
-    		System.out.println("ccompsentence "+ccompsentence);
+//    		System.out.println("ccompsentence "+ccompsentence);
     		ccompsentences.add(ccompsentence);
     	}
     	return ccompsubgraph;
@@ -279,9 +296,9 @@ public class ChineseSentenceSimplificator {
     		
     		depsubgraph = dependencies.getSubgraphVertices(depnode);
     		
-            System.out.println(matcher.getNode("A") + " >dep " +depnode);
+//            System.out.println(matcher.getNode("A") + " >dep " +depnode);
             
-            System.out.println("depsubgraph "+depsubgraph);
+//            System.out.println("depsubgraph "+depsubgraph);
 			
             rootsubgraph.removeAll(depsubgraph);
             
@@ -314,7 +331,7 @@ public class ChineseSentenceSimplificator {
         	{
     			depsentence = depsentence+iterdepsubgraph.next().word();
         	}
-    		System.out.println("depsentence "+depsentence);
+//    		System.out.println("depsentence "+depsentence);
     		depsentences.add(depsentence);
     		
 //        	String dep = matcher.getMatch().word();

@@ -12,15 +12,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <corenlp.version>3.6.0</corenlp.version>
+    <corenlp.version>3.7.0</corenlp.version>
   </properties>
 
   <dependencies>
-  	<dependency>
-	    <groupId>org.slf4j</groupId>
-	    <artifactId>slf4j-simple</artifactId>
-	    <version>1.7.22</version>
-	</dependency>
   	<dependency>
   		<groupId>edu.stanford.nlp</groupId>
   		<artifactId>stanford-corenlp</artifactId>
@@ -37,6 +32,16 @@
   		<artifactId>stanford-corenlp</artifactId>
   		<version>3.7.0</version>
   		<classifier>models-chinese</classifier>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.slf4j</groupId>
+  		<artifactId>slf4j-simple</artifactId>
+  		<version>1.7.25</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.slf4j</groupId>
+  		<artifactId>slf4j-api</artifactId>
+  		<version>1.7.25</version>
   	</dependency>
   </dependencies>
 </project>

@@ -1,5 +1,8 @@
 package jch.sentencesimplification;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -11,7 +14,7 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
 import edu.stanford.nlp.semgraph.semgrex.SemgrexMatcher;
 import edu.stanford.nlp.semgraph.semgrex.SemgrexPattern;
 import edu.stanford.nlp.util.CoreMap;
@@ -20,9 +23,25 @@ public class EnglishSentenceSimplificator
 {
 	public static void main(String [] args)
 	{
+//		Sample input:
+//		String text = "Do you know who the US president is" ;
+//		String text = "He says that you like to swim";
+//		String text = "I am certain that he did it";
+//		String text = "I admire the fact that you are honest";
+//		String text = "Do you know the latest computer published by apple" ;
+		BufferedReader buf = new BufferedReader(new InputStreamReader(System.in)); 
 		EnglishSentenceSimplificator ess  = new EnglishSentenceSimplificator();
-		List<String> dissentences = ess.ProcessDepency();
-		System.out.println(dissentences);
+		System.out.print("Enter your question: ");
+		String text = "";
+		try {
+			text = buf.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		List<String> dissentences = ess.ProcessDepency(text);
+		
+		System.out.println("Clauses: "+dissentences);
 	}
 	
 	private Set<IndexedWord> rootsubgraph = null;
@@ -31,19 +50,15 @@ public class EnglishSentenceSimplificator
 	private List<String> dobjsentences = new ArrayList<String>();
 	private List<String> depsentences = new ArrayList<String>();
 
-	public List<String> ProcessDepency()
+	public List<String> ProcessDepency(String text)
 	{
 		Properties props = new Properties();
         
         props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref" );
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         
-		String text = "Do you know who the US president is" ;
-//		String text = "He says that you like to swim";
-//		String text = "I am certain that he did it";
-//		String text = "I admire the fact that you are honest";
-//		String text = "Do you know the latest computer published by apple" ;
-		
+
+		System.out.println("Input: "+text);
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
@@ -51,12 +66,12 @@ public class EnglishSentenceSimplificator
         
         for (CoreMap sentence: sentences) 
         {
-//        	SemanticGraph dependencies = sentence.get(BasicDependenciesAnnotation.class);
-        	SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
+        	SemanticGraph dependencies = sentence.get(BasicDependenciesAnnotation.class);
+//        	SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
 //        	SemanticGraph dependencies = sentence.get(CollapsedDependenciesAnnotation.class);
         	
+        	System.out.println("SemanticGraph:");
         	System.out.println(dependencies);
-        	
         	IndexedWord root = dependencies.getFirstRoot();
         	
         	rootsubgraph = dependencies.getSubgraphVertices(root);       	
@@ -68,14 +83,14 @@ public class EnglishSentenceSimplificator
         	this.dobjAnalyze(dependencies, root, layersnum);
         	this.depAnalyze(dependencies, root, layersnum);
         	
-        	System.out.println("rootsubgraph "+rootsubgraph);
+//        	System.out.println("rootsubgraph "+rootsubgraph);
     		Iterator<IndexedWord> iterrootsubgraph = rootsubgraph.iterator();
     		String rootsentence = "0.";
     		while(iterrootsubgraph.hasNext())
         	{
     			rootsentence = rootsentence+" "+iterrootsubgraph.next().word();
         	}
-    		System.out.println("rootsentence "+rootsentence);
+//    		System.out.println("rootsentence "+rootsentence);
     		
     		dissentences.add(rootsentence);
     		dissentences.addAll(nsubjsentences);
@@ -95,9 +110,9 @@ public class EnglishSentenceSimplificator
     	while(matcher.find())
     	{
     		IndexedWord nsubjnode = matcher.getNode("B");
-    		System.out.println(matcher.getNode("A") + " >nsubj " +nsubjnode);
+//    		System.out.println(matcher.getNode("A") + " >nsubj " +nsubjnode);
             
-            System.out.println("nsubjsubgraph "+nsubjsubgraph);
+//            System.out.println("nsubjsubgraph "+nsubjsubgraph);
 
             SemgrexPattern pattern1 = SemgrexPattern.compile("{word:"+nsubjnode.word()+";tag:"+nsubjnode.tag()+"}=A >relcl {}=B");
             SemgrexPattern pattern2 = SemgrexPattern.compile("{word:"+nsubjnode.word()+";tag:"+nsubjnode.tag()+"}=A >acl {}=B");
@@ -109,7 +124,7 @@ public class EnglishSentenceSimplificator
     			layersnum++;
 
     			nsubjsubgraph = dependencies.getSubgraphVertices(nsubjnode);
-    			System.out.println("nsubjsubgraph "+nsubjsubgraph);
+//    			System.out.println("nsubjsubgraph "+nsubjsubgraph);
     			
     			rootsubgraph.removeAll(nsubjsubgraph);
     			
@@ -157,9 +172,9 @@ public class EnglishSentenceSimplificator
     	{
     		IndexedWord dobjnode = matcher.getNode("B");
 
-    		System.out.println(matcher.getNode("A") + " >dobj " +dobjnode);
+//    		System.out.println(matcher.getNode("A") + " >dobj " +dobjnode);
             
-            System.out.println("dobjsubgraph "+dobjsubgraph);
+//            System.out.println("dobjsubgraph "+dobjsubgraph);
 
             SemgrexPattern pattern1 = SemgrexPattern.compile("{word:"+dobjnode.word()+";tag:"+dobjnode.tag()+"}=A >relcl {}=B");
         	SemgrexMatcher matcher1 = pattern1.matcher(dependencies);
@@ -174,7 +189,7 @@ public class EnglishSentenceSimplificator
     		{
     			layersnum++;
     			dobjsubgraph = dependencies.getSubgraphVertices(dobjnode);
-    			System.out.println("dobjsubgraph "+dobjsubgraph);
+//    			System.out.println("dobjsubgraph "+dobjsubgraph);
     			
     			rootsubgraph.removeAll(dobjsubgraph);
     			
@@ -207,7 +222,7 @@ public class EnglishSentenceSimplificator
             	{
         			dobjsentence = dobjsentence+" "+iterdobjsubgraph.next().word();
             	}
-        		System.out.println("dobjsentence "+dobjsentence);
+//        		System.out.println("dobjsentence "+dobjsentence);
         		dobjsentences.add(dobjsentence);
     		}
 		}
@@ -227,9 +242,9 @@ public class EnglishSentenceSimplificator
     		IndexedWord ccompnode = matcher.getNode("B");
 
     		ccompsubgraph = dependencies.getSubgraphVertices(ccompnode);
-    		System.out.println(matcher.getNode("A") + " >ccomp " +ccompnode);
+//    		System.out.println(matcher.getNode("A") + " >ccomp " +ccompnode);
             
-            System.out.println("ccompsubgraph "+ccompsubgraph);
+//            System.out.println("ccompsubgraph "+ccompsubgraph);
     		rootsubgraph.removeAll(ccompsubgraph);
     		
     		Set<IndexedWord> ccompccompsub = this.ccompAnalyze(dependencies, ccompnode, layersnum);
@@ -261,7 +276,7 @@ public class EnglishSentenceSimplificator
     			ccompsentence = ccompsentence+" "+iterccompsubgraph.next().word();
         	}
     		
-    		System.out.println("ccompsentence "+ccompsentence);
+//    		System.out.println("ccompsentence "+ccompsentence);
     		ccompsentences.add(ccompsentence);
     	}
     	return ccompsubgraph;
@@ -280,9 +295,9 @@ public class EnglishSentenceSimplificator
     		
     		depsubgraph = dependencies.getSubgraphVertices(depnode);
     		
-            System.out.println(matcher.getNode("A") + " >dep " +depnode);
+//            System.out.println(matcher.getNode("A") + " >dep " +depnode);
             
-            System.out.println("depsubgraph "+depsubgraph);
+//            System.out.println("depsubgraph "+depsubgraph);
 			
             rootsubgraph.removeAll(depsubgraph);
             
@@ -315,11 +330,11 @@ public class EnglishSentenceSimplificator
         	{
     			depsentence = depsentence+" "+iterdepsubgraph.next().word();
         	}
-    		System.out.println("depsentence "+depsentence);
+//    		System.out.println("depsentence "+depsentence);
     		depsentences.add(depsentence);
     		
 //        	String dep = matcher.getMatch().word();
-//        	String dep = matcher.getNode("dep").word();？
+//        	String dep = matcher.getNode("dep").word();
     	}
     	return depsubgraph;
 	}
